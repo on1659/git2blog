@@ -42,31 +42,57 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-3">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="px-5 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{
-                color: isActive(link.href) ? "white" : "white",
-                background: isActive(link.href) ? "var(--primary)" : "var(--primary-hover)",
-                opacity: isActive(link.href) ? 1 : 0.7,
-              }}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="hidden md:flex items-center gap-2">
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                style={{
+                  color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                  background: active ? "var(--bg-elevated)" : "transparent",
+                  border: active ? "1px solid var(--border-emphasis)" : "1px solid transparent",
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.color = "var(--text-primary)";
+                    e.currentTarget.style.background = "var(--bg-surface)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.color = "var(--text-secondary)";
+                    e.currentTarget.style.background = "transparent";
+                  }
+                }}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <Link
             href="/write"
-            className="px-5 py-2 rounded-lg text-sm font-medium transition-all"
+            className="ml-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5"
             style={{
               color: "white",
-              background: pathname.startsWith("/write") ? "var(--primary)" : "var(--primary-hover)",
-              opacity: pathname.startsWith("/write") ? 1 : 0.7,
+              background: "var(--primary)",
+              boxShadow: "var(--shadow-sm)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "var(--primary-hover)";
+              e.currentTarget.style.boxShadow = "var(--primary-glow)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "var(--primary)";
+              e.currentTarget.style.boxShadow = "var(--shadow-sm)";
             }}
           >
-            + 새 글
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M8 3v10M3 8h10" />
+            </svg>
+            새 글
           </Link>
         </div>
 
@@ -92,32 +118,36 @@ export default function Navbar() {
             borderBottom: "1px solid var(--border-default)",
           }}
         >
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="px-4 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center justify-center"
-              style={{
-                color: "white",
-                background: isActive(link.href) ? "var(--primary)" : "var(--primary-hover)",
-                opacity: isActive(link.href) ? 1 : 0.7,
-              }}
-              onClick={() => setMenuOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="px-4 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center justify-center"
+                style={{
+                  color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                  background: active ? "var(--bg-elevated)" : "transparent",
+                }}
+                onClick={() => setMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <Link
             href="/write"
-            className="px-4 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center justify-center"
+            className="px-4 py-3 rounded-lg text-sm font-medium min-h-[44px] flex items-center justify-center gap-1.5"
             style={{
               color: "white",
-              background: pathname.startsWith("/write") ? "var(--primary)" : "var(--primary-hover)",
-              opacity: pathname.startsWith("/write") ? 1 : 0.7,
+              background: "var(--primary)",
             }}
             onClick={() => setMenuOpen(false)}
           >
-            + 새 글
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M8 3v10M3 8h10" />
+            </svg>
+            새 글
           </Link>
         </div>
       )}
