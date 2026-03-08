@@ -1,88 +1,3 @@
-# git2blog
-
-GitHub 리포 → 커밋 분석 → 블로그 글 생성 → Hashnode 발행.
-이 프로젝트는 CLI 도구가 아니라, Claude Code 워크플로우다.
-
-## 프로젝트 구조
-
-```
-CLAUDE.md              ← 이 파일 (스킬 + 워크플로우)
-.env                   ← API 키 (gitignore)
-scripts/publish.sh     ← Hashnode 발행 스크립트
-posts/                 ← 생성된 글 보관
-```
-
-## 환경변수
-
-.env 파일에 아래 값이 필요하다:
-
-```
-HASHNODE_TOKEN=xxxxxxxx
-HASHNODE_PUB_ID=xxxxxxxx
-GITHUB_TOKEN=ghp_xxxxx    # 선택: private 리포 또는 rate limit 확보
-```
-
-## 워크플로우
-
-사용자가 GitHub URL을 주면 아래 순서로 진행한다.
-
-### 1단계: 커밋 로그 수집
-
-```bash
-curl -s -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/{owner}/{repo}/commits?per_page=50"
-```
-
-GitHub Token이 .env에 있으면 헤더에 추가한다:
-```bash
--H "Authorization: token $GITHUB_TOKEN"
-```
-
-수집 대상: 커밋 메시지, 날짜, author, sha. README.md도 가져온다.
-
-### 2단계: 제목 + 요약 제안
-
-커밋 로그를 분석해서 블로그 글 제목 + 한줄 요약을 제안한다.
-여러 편이 나올 수 있으면 복수 제안.
-**사용자 승인 없이 본문을 바로 쓰지 않는다.**
-
-### 3단계: 글 작성
-
-승인 후 아래 blog-writing 스킬 규칙을 따라 글을 작성한다.
-한국어 → `posts/blog_XX_ko_[주제].md`
-영어 → `posts/blog_XX_en_[주제].md`
-
-### 4단계: 발행
-
-사용자가 "발행해줘"라고 하면 scripts/publish.sh를 실행한다.
-
-```bash
-./scripts/publish.sh posts/blog_XX_ko_[주제].md          # 바로 발행
-./scripts/publish.sh posts/blog_XX_ko_[주제].md --draft   # 초안 저장
-```
-
-또는 직접 curl로 Hashnode GraphQL API를 호출해도 된다.
-
-### Publication ID 조회 (최초 1회)
-
-```bash
-source .env
-curl -s -X POST https://gql.hashnode.com \
-  -H "Content-Type: application/json" \
-  -H "Authorization: $HASHNODE_TOKEN" \
-  -d '{"query":"{ publication(host: \"radar92.hashnode.dev\") { id title } }"}'
-```
-
----
----
-
-# Blog Writing Skill
-
----
-name: blog-writing
-description: Use this skill whenever the user asks to write a blog post, create blog content, or mentions '블로그', 'blog', 'post', or 'article'. Also trigger when the user drops raw materials (conversation logs, notes, screenshots) and wants them turned into blog posts. This skill defines the writing style, structure, tone, and bilingual (Korean/English) publishing rules for a solo developer's AI build log. Always use this skill for any blog-related writing task, even if the user doesn't explicitly say 'use the blog skill'.
----
-
 # Blog Writing Skill
 
 이 스킬은 블로그 글 작성 시 따라야 할 스타일, 구조, 규칙을 정의한다.
@@ -201,60 +116,7 @@ Claude: (자신있게 틀린 답을 내놓음)
 나: "...간지가 틀렸는데?"
 ```
 
-**기술 선택/비교가 있으면 → "왜 A를 골랐는지" 서술**
-
-다른 선택지와 비교하면서 자연스럽게 설명한다. 코드 블록을 두 개 나란히 놓고 차이를 보여준다:
-
-```
-bash 버전을 먼저 만들었다. sed 4줄 + grep + 파이프라인.
-되긴 되는데 읽을 수가 없다.
-
-Python 버전은 한 줄이다.
-match = re.match(r'^---\n(.*?)\n---\n(.*)$', content, re.DOTALL)
-```
-
-비교 대상이 있으면 임팩트가 훨씬 강하다.
-
 ※ Hashnode는 Mermaid 다이어그램을 지원한다. 복잡한 흐름도는 Mermaid로, 간단한 건 ASCII로.
-
----
-
-## 깊이 규칙 (섹션별 밀도)
-
-글이 짧으면 "그래서 뭐?" 가 된다. 각 섹션이 두텁게 채워져야 읽는 사람이 실제로 써먹을 수 있다.
-
-**모든 섹션에 "왜"를 넣는다.** "이렇게 했다"만으로는 부족하다. 왜 이 방법을 선택했는지, 다른 방법은 왜 안 됐는지까지 써야 글이 깊어진다. "bash로 먼저 짰다 → 왜? → 읽을 수가 없어서 Python으로 다시 짰다" 이런 흐름.
-
-**하나의 주제를 여러 각도에서 파고든다.** "frontmatter를 파싱했다"로 끝내지 않는다. 어떻게 파싱했는지, 뭐가 문제였는지, 어떤 코드로 해결했는지, 그 코드가 왜 그 형태인지까지 풀어낸다. 표면만 훑는 게 아니라 한 꺼풀씩 벗긴다.
-
-**실전 코드를 아끼지 않는다.** 짧은 코드 블록을 여러 번 보여주는 게 긴 설명보다 낫다. 한 섹션에 코드 블록 2~3개가 있어도 된다. 코드 사이사이에 "이 코드가 왜 이렇게 생겼는지"를 짧게 설명한다.
-
-**비교와 대조로 입체감을 만든다.** "A를 쓴다"보다 "A를 쓰는 이유, B는 왜 안 되는지"가 훨씬 읽힌다. 기술 선택이 있으면 반드시 다른 선택지와 비교한다.
-
-나쁜 예:
-
-```
-Python으로 frontmatter를 파싱했다.
-```
-
-좋은 예:
-
-```
-bash 버전을 먼저 만들었다. sed로 --- 사이를 잘라내는 게 
-생각보다 까다롭다.
-
-FRONTMATTER=$(echo "$CONTENT" | sed -n '/^---$/,/^---$/p' | sed '1d;$d')
-
-되긴 되는데, 읽을 수가 없다.
-
-그래서 Python 버전을 만들었다. 한 줄이다.
-
-match = re.match(r'^---\n(.*?)\n---\n(.*)$', content, re.DOTALL)
-
-bash에서 sed 4줄 쓰던 걸 Python에서 1줄로 끝냈다.
-```
-
-두 번째 예시가 훨씬 길다. 하지만 읽는 사람 입장에서는 **실제로 써먹을 수 있는 정보**가 담겨 있다. 이게 깊이다.
 
 ---
 
@@ -354,12 +216,6 @@ Hashnode에서 "여러분은 어떻게 생각하시나요?"는 식상하다. 대
 
 글 마지막은 인용구로 끝낸다. 그 뒤에 아무것도 붙이지 않는다.
 
-### 섹션 깊이 기준
-
-각 `##` 섹션은 최소 3~5개 문단 + 코드 블록 1개 이상으로 구성한다. "왜 이렇게 했는지"와 "다른 방법은 왜 안 됐는지"를 반드시 포함한다. 하나의 섹션이 짧으면(2문단 이하) 다른 섹션과 합치거나, 실전 예시를 더 넣어서 두텁게 만든다.
-
-섹션 수는 최소 4개 이상. 글 전체가 5000~8000자가 되려면 얇은 섹션 10개보다 두꺼운 섹션 4~6개가 낫다.
-
 ---
 
 ## Frontmatter 및 메타데이터
@@ -389,10 +245,9 @@ cover: [URL]  # 선택
 
 ## 분량
 
-- 편당 **5000~8000자** (한국어 기준)
-- 읽는 데 **10~15분**
+- 편당 **2000~3000자** (한국어 기준)
+- 읽는 데 **5분 내외**
 - 하나의 글에 **하나의 핵심 메시지만**
-- 짧은 글보다 **깊은 글**. 각 섹션이 실전 예시와 코드로 두텁게 채워져야 한다.
 
 ---
 
@@ -494,11 +349,6 @@ The first lesson I learned building a fortune-telling app:
 it's not about what you ask AI to do — it's about what you don't.
 
 "Tell me the fortune for someone born March 15, 1990."
-
-I threw this straight at an LLM. The response looked great.
-
-But there was a problem. The base calculations were wrong.
-```
 
 I threw this straight at an LLM. The response looked great.
 
