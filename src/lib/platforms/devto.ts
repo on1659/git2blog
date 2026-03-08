@@ -1,0 +1,141 @@
+import type { BlogPlatform, PublishInput, PublishResult, CheckExistsResult } from "./types";
+
+export const devto: BlogPlatform = {
+  config: {
+    id: "devto",
+    name: "DEV.to",
+    icon: "D",
+    url: "https://dev.to",
+    credentialFields: [
+      {
+        key: "apiKey",
+        label: "API 키",
+        type: "password",
+        required: true,
+        placeholder: "DEV.to API 키",
+      },
+    ],
+  },
+
+  isConfigured(creds) {
+    return !!creds.apiKey;
+  },
+
+  async validateCredentials(creds) {
+    try {
+      const res = await fetch("https://dev.to/api/users/me", {
+        headers: { "api-key": creds.apiKey },
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
+  async publish(input: PublishInput, creds): Promise<PublishResult> {
+    try {
+      const res = await fetch("https://dev.to/api/articles", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": creds.apiKey,
+        },
+        body: JSON.stringify({
+          article: {
+            title: input.title,
+            body_markdown: input.body,
+            published: !input.isDraft,
+            tags: input.tags.slice(0, 4),
+            cover_image: input.coverImage || undefined,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        return {
+          success: false,
+          platform: "devto",
+          error: data.error || `HTTP ${res.status}`,
+        };
+      }
+
+      const data = await res.json();
+      return {
+        success: true,
+        platform: "devto",
+        platformPostId: String(data.id),
+        url: data.url,
+      };
+    } catch (e: unknown) {
+      return {
+        success: false,
+        platform: "devto",
+        error: e instanceof Error ? e.message : "알 수 없는 오류",
+      };
+    }
+  },
+
+  async update(
+    platformPostId: string,
+    input: PublishInput,
+    creds
+  ): Promise<PublishResult> {
+    try {
+      const res = await fetch(
+        `https://dev.to/api/articles/${platformPostId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "api-key": creds.apiKey,
+          },
+          body: JSON.stringify({
+            article: {
+              title: input.title,
+              body_markdown: input.body,
+              tags: input.tags.slice(0, 4),
+            },
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        return {
+          success: false,
+          platform: "devto",
+          error: `HTTP ${res.status}`,
+        };
+      }
+
+      const data = await res.json();
+      return {
+        success: true,
+        platform: "devto",
+        platformPostId: String(data.id),
+        url: data.url,
+      };
+    } catch (e: unknown) {
+      return {
+        success: false,
+        platform: "devto",
+        error: e instanceof Error ? e.message : "알 수 없는 오류",
+      };
+    }
+  },
+
+  async checkExists(platformPostId: string, creds): Promise<CheckExistsResult> {
+    try {
+      const res = await fetch(`https://dev.to/api/articles/${platformPostId}`, {
+        headers: { "api-key": creds.apiKey },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return { exists: true, url: data.url, title: data.title };
+      }
+      return { exists: false };
+    } catch {
+      return { exists: false };
+    }
+  },
+};
