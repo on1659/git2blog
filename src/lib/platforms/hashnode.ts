@@ -83,7 +83,7 @@ export const hashnode: BlogPlatform = {
   async checkExists(platformPostId: string, creds): Promise<CheckExistsResult> {
     try {
       const query = `
-        query GetPost($id: ObjectId!) {
+        query GetPost($id: ID!) {
           post(id: $id) {
             id
             title
