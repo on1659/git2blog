@@ -40,50 +40,81 @@ export default function LoginPage() {
       style={{
         minHeight: "100vh",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         background: "var(--bg-base, #0a0a0a)",
       }}
     >
-      <form
-        onSubmit={handleSubmit}
-        className="card"
-        style={{
-          padding: "2.5rem",
-          width: "100%",
-          maxWidth: 360,
-        }}
-      >
+      {/* Title area */}
+      <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
         <h1
-          className="font-semibold mb-2"
-          style={{ fontSize: "1.25rem", color: "var(--text-primary)" }}
+          style={{
+            fontSize: "2rem",
+            fontWeight: 700,
+            color: "var(--text-primary, #fff)",
+            marginBottom: "0.5rem",
+          }}
         >
           git2blog
         </h1>
-        <p
-          className="text-sm mb-6"
-          style={{ color: "var(--text-tertiary)" }}
-        >
-          비밀번호를 입력하세요
+        <p style={{ fontSize: "1rem", color: "var(--text-tertiary, #888)" }}>
+          관리를 위해 로그인하세요
         </p>
+      </div>
+
+      {/* Login card */}
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          width: "100%",
+          maxWidth: 440,
+          background: "var(--bg-surface, #141414)",
+          border: "1px solid var(--border-subtle, #262626)",
+          borderRadius: 16,
+          padding: "2.5rem",
+        }}
+      >
+        <label
+          style={{
+            display: "block",
+            fontSize: "0.95rem",
+            fontWeight: 500,
+            color: "var(--text-primary, #fff)",
+            marginBottom: "0.75rem",
+          }}
+        >
+          비밀번호
+        </label>
 
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="비밀번호"
+          placeholder="비밀번호를 입력하세요"
           autoFocus
-          className="w-full px-4 py-3 rounded-lg text-sm mb-4"
           style={{
+            width: "100%",
+            padding: "1rem 1.25rem",
+            borderRadius: 10,
             background: "var(--bg-elevated, #1a1a1a)",
             border: "1px solid var(--border-subtle, #333)",
             color: "var(--text-primary, #fff)",
+            fontSize: "1.1rem",
             outline: "none",
+            marginBottom: "1.5rem",
+            boxSizing: "border-box",
           }}
         />
 
         {error && (
-          <p className="text-sm mb-4" style={{ color: "var(--error, #ef4444)" }}>
+          <p
+            style={{
+              fontSize: "0.9rem",
+              color: "var(--error, #ef4444)",
+              marginBottom: "1rem",
+            }}
+          >
             {error}
           </p>
         )}
@@ -91,8 +122,14 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading || !password}
-          className="btn btn-primary w-full text-sm"
-          style={{ padding: "0.75rem" }}
+          className="btn btn-primary"
+          style={{
+            width: "100%",
+            padding: "1rem",
+            fontSize: "1.1rem",
+            fontWeight: 600,
+            borderRadius: 10,
+          }}
         >
           {loading ? "확인 중..." : "로그인"}
         </button>

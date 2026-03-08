@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "./components/Navbar";
+import AppShell from "./components/AppShell";
 
 export const metadata: Metadata = {
   title: "git2blog",
@@ -15,10 +15,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
-        <Navbar />
-        <main className="mx-auto px-6 py-12 lg:px-16" style={{ maxWidth: 1100 }}>
-          {children}
-        </main>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
