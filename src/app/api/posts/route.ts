@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       finalSlug = `${slug}-${Date.now()}`;
     }
 
-    const now = new Date().toISOString();
+    const now = new Date();
     const inserted = await db
       .insert(posts)
       .values({

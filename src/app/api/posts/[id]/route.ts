@@ -59,7 +59,7 @@ export async function PUT(
     const body = await request.json();
     const { versions } = body;
 
-    const now = new Date().toISOString();
+    const now = new Date();
 
     // Update post timestamp
     await db

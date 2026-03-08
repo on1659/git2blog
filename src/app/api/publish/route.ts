@@ -113,7 +113,7 @@ export async function POST(request: Request) {
             platformPostId: result.platformPostId || null,
             url: result.url || null,
             isDraft: !!isDraft,
-            publishedAt: new Date().toISOString(),
+            publishedAt: new Date(),
           });
           console.log("[publish] DB 기록 완료");
         }
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
     if (!isDraft && results.some((r) => r.success)) {
       await db
         .update(posts)
-        .set({ status: "published", updatedAt: new Date().toISOString() })
+        .set({ status: "published", updatedAt: new Date() })
         .where(eq(posts.id, postId));
     }
 

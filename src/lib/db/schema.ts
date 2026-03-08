@@ -1,23 +1,19 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { pgTable, serial, text, boolean, timestamp, unique } from "drizzle-orm/pg-core";
 
-export const posts = sqliteTable("posts", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const posts = pgTable("posts", {
+  id: serial("id").primaryKey(),
   slug: text("slug").unique().notNull(),
   githubUrl: text("github_url"),
   status: text("status", { enum: ["draft", "published"] })
     .notNull()
     .default("draft"),
-  createdAt: text("created_at")
-    .notNull()
-    .$defaultFn(() => new Date().toISOString()),
-  updatedAt: text("updated_at")
-    .notNull()
-    .$defaultFn(() => new Date().toISOString()),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const postVersions = sqliteTable("post_versions", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  postId: integer("post_id")
+export const postVersions = pgTable("post_versions", {
+  id: serial("id").primaryKey(),
+  postId: serial("post_id")
     .notNull()
     .references(() => posts.id, { onDelete: "cascade" }),
   language: text("language", { enum: ["ko", "en"] }).notNull(),
@@ -26,45 +22,37 @@ export const postVersions = sqliteTable("post_versions", {
   body: text("body").notNull().default(""),
   tags: text("tags").notNull().default("[]"),
   coverImage: text("cover_image"),
-  createdAt: text("created_at")
-    .notNull()
-    .$defaultFn(() => new Date().toISOString()),
-  updatedAt: text("updated_at")
-    .notNull()
-    .$defaultFn(() => new Date().toISOString()),
-});
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  unique("post_versions_post_id_language_unique").on(table.postId, table.language),
+]);
 
-export const publications = sqliteTable("publications", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  postVersionId: integer("post_version_id")
+export const publications = pgTable("publications", {
+  id: serial("id").primaryKey(),
+  postVersionId: serial("post_version_id")
     .notNull()
     .references(() => postVersions.id, { onDelete: "cascade" }),
   platformId: text("platform_id").notNull(),
   platformPostId: text("platform_post_id"),
   url: text("url"),
-  isDraft: integer("is_draft", { mode: "boolean" }).notNull().default(false),
-  isLive: integer("is_live", { mode: "boolean" }).default(true),
-  lastCheckedAt: text("last_checked_at"),
-  publishedAt: text("published_at")
-    .notNull()
-    .$defaultFn(() => new Date().toISOString()),
+  isDraft: boolean("is_draft").notNull().default(false),
+  isLive: boolean("is_live").default(true),
+  lastCheckedAt: timestamp("last_checked_at"),
+  publishedAt: timestamp("published_at").notNull().defaultNow(),
 });
 
-export const platformCredentials = sqliteTable("platform_credentials", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const platformCredentials = pgTable("platform_credentials", {
+  id: serial("id").primaryKey(),
   platformId: text("platform_id").unique().notNull(),
   credentials: text("credentials").notNull().default("{}"),
-  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-  createdAt: text("created_at")
-    .notNull()
-    .$defaultFn(() => new Date().toISOString()),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const commitCache = sqliteTable("commit_cache", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+export const commitCache = pgTable("commit_cache", {
+  id: serial("id").primaryKey(),
   githubUrl: text("github_url").notNull(),
   commits: text("commits").notNull().default("[]"),
-  fetchedAt: text("fetched_at")
-    .notNull()
-    .$defaultFn(() => new Date().toISOString()),
+  fetchedAt: timestamp("fetched_at").notNull().defaultNow(),
 });

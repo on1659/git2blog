@@ -14,7 +14,7 @@ type PostItem = {
   id: number;
   slug: string;
   status: string;
-  updatedAt: string;
+  updatedAt: string | Date;
   versions: { id: number; language: string; title: string }[];
   publications?: { platformId: string; url: string | null }[];
 };

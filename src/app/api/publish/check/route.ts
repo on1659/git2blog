@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const now = new Date().toISOString();
+    const now = new Date();
     const results: {
       publicationId: number;
       platformId: string;

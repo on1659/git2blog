@@ -87,7 +87,7 @@ export async function POST(
         platformId,
         credentials: credJson,
         isActive: true,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       });
     }
 
