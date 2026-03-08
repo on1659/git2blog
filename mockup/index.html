@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>git2blog</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-inner">
+                <h1 class="logo" onclick="showPage('dashboard')">git2blog</h1>
+                <button class="btn btn-primary" onclick="showPage('write')">
+                    + 새 글
+                </button>
+            </div>
+        </header>
+
+        <!-- Dashboard -->
+        <main id="page-dashboard" class="page active">
+            <div class="container">
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-label">총 포스트</div>
+                        <div class="stat-value">12</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">발행완료</div>
+                        <div class="stat-value success">8</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">초안</div>
+                        <div class="stat-value warning">4</div>
+                    </div>
+                </div>
+
+                <section class="section">
+                    <h2 class="section-title">최근 포스트</h2>
+                    <div class="post-list">
+                        <div class="post-item" onclick="showPage('edit')">
+                            <div class="post-info">
+                                <h3 class="post-title">네이버 쇼핑 API로 가격비교 서비스 만들기</h3>
+                                <div class="post-meta">2026-03-07 · 한국어/영어</div>
+                            </div>
+                            <span class="badge success">발행완료</span>
+                        </div>
+                        <div class="post-item" onclick="showPage('edit')">
+                            <div class="post-info">
+                                <h3 class="post-title">Svelte + Express 5 SPA 배포기</h3>
+                                <div class="post-meta">2026-03-06 · 한국어/영어</div>
+                            </div>
+                            <span class="badge success">발행완료</span>
+                        </div>
+                        <div class="post-item" onclick="showPage('edit')">
+                            <div class="post-info">
+                                <h3 class="post-title">Claude API로 블로그 글 자동 생성하기</h3>
+                                <div class="post-meta">2026-03-05 · 한국어</div>
+                            </div>
+                            <span class="badge warning">초안</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Write Page -->
+        <main id="page-write" class="page">
+            <div class="container narrow">
+                <div class="page-header">
+                    <button class="btn-back" onclick="showPage('dashboard')">← 목록</button>
+                    <h1 class="page-title">새 글 작성</h1>
+                </div>
+
+                <!-- Mode Select -->
+                <div id="mode-select" class="step active">
+                    <div class="mode-grid">
+                        <button class="mode-btn" onclick="selectMode('auto')">
+                            <span class="mode-icon">🤖</span>
+                            <span class="mode-name">자동 생성</span>
+                            <span class="mode-desc">GitHub 커밋 분석</span>
+                        </button>
+                        <button class="mode-btn" onclick="selectMode('upload')">
+                            <span class="mode-icon">📄</span>
+                            <span class="mode-name">파일 업로드</span>
+                            <span class="mode-desc">MD 파일 직접 업로드</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Auto Mode -->
+                <div id="step-auto" class="step">
+                    <div class="form-group">
+                        <label>GitHub URL</label>
+                        <input type="text" class="input" placeholder="https://github.com/owner/repo">
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="showStep('step-suggestions')">분석하기</button>
+                    <button class="btn btn-ghost btn-block" onclick="showStep('mode-select')">뒤로</button>
+                </div>
+
+                <!-- Upload Mode -->
+                <div id="step-upload" class="step">
+                    <div class="upload-box" id="upload-box">
+                        <input type="file" id="file-input" accept=".md" multiple hidden>
+                        <span class="upload-icon">📁</span>
+                        <span class="upload-text">MD 파일을 드래그하거나 클릭</span>
+                    </div>
+                    <div id="file-list" class="file-list"></div>
+                    <button class="btn btn-primary btn-block" id="upload-btn" style="display:none"
+                        onclick="uploadFiles()">업로드</button>
+                    <button class="btn btn-ghost btn-block" onclick="showStep('mode-select')">뒤로</button>
+                </div>
+
+                <!-- Suggestions -->
+                <div id="step-suggestions" class="step">
+                    <div class="card">
+                        <h3>📊 분석 결과</h3>
+                        <p>커밋 47개 · 2026-02-15 ~ 2026-03-07</p>
+                    </div>
+                    <div class="suggestion-list">
+                        <button class="suggestion-item selected">네이버 쇼핑 API 통합으로 가격비교</button>
+                        <button class="suggestion-item">Svelte + Express 5로 SPA 배포하기</button>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="generatePost()">생성하기</button>
+                    <button class="btn btn-ghost btn-block" onclick="showStep('step-auto')">뒤로</button>
+                </div>
+
+                <!-- Loading -->
+                <div id="step-loading" class="step">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>생성 중...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Edit Page -->
+        <main id="page-edit" class="page">
+            <div class="editor-header">
+                <button class="btn-back" onclick="showPage('dashboard')">← 목록</button>
+                <div class="tabs">
+                    <button class="tab active">한국어</button>
+                    <button class="tab">영어</button>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-ghost">저장</button>
+                    <button class="btn btn-success">발행</button>
+                </div>
+            </div>
+            <div class="editor-body">
+                <textarea class="editor" id="editor">---
+title: 네이버 쇼핑 API로 가격비교 서비스 만들기
+---
+
+전자담배 액상 가격이 판매처마다 다르다.
+
+그래서 만들었다. vapecompare.</textarea>
+                <div class="preview">
+                    <h1>네이버 쇼핑 API로 가격비교 서비스 만들기</h1>
+                    <p>전자담배 액상 가격이 판매처마다 다르다.</p>
+                    <p><strong>그래서 만들었다. vapecompare.</strong></p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h2>발행 설정</h2>
+            <div class="radio-group">
+                <label><input type="radio" name="target" checked> 둘 다 발행</label>
+                <label><input type="radio" name="target"> 한국어만</label>
+                <label><input type="radio" name="target"> 영어만</label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" onclick="closeModal()">취소</button>
+                <button class="btn btn-success" onclick="publish()">발행</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
