@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
+import MarkdownPreview from "../../components/MarkdownPreview";
 
 type Version = {
   id: number;
@@ -154,28 +155,6 @@ export default function EditorPage() {
     await fetch(`/api/posts/${postId}`, { method: "DELETE" });
     router.push("/");
   };
-
-  function renderMarkdown(md: string): string {
-    return md
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-      .replace(/^## (.+)$/gm, "<h2>$1</h2>")
-      .replace(/^# (.+)$/gm, "<h1>$1</h1>")
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      .replace(/`([^`]+)`/g, "<code>$1</code>")
-      .replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>")
-      .replace(/^---$/gm, "<hr>")
-      .replace(/\n\n/g, "</p><p>")
-      .replace(/^(.+)$/gm, (match) => {
-        if (match.startsWith("<h") || match.startsWith("<blockquote") || match.startsWith("<hr") || match.startsWith("</p>"))
-          return match;
-        return match;
-      })
-      .replace(/^(?!<)(.+)$/gm, "<p>$1</p>");
-  }
 
   if (loading) {
     return (
@@ -373,10 +352,9 @@ export default function EditorPage() {
         </div>
 
         <div className={`flex-1 ${mobileView === "edit" ? "hidden md:block" : ""}`}>
-          <div
-            className="prose card rounded-lg p-5 h-full min-h-[500px] overflow-y-auto text-sm"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(currentBody) }}
-          />
+          <div className="card rounded-lg p-5 h-full min-h-[500px] overflow-y-auto text-sm">
+            <MarkdownPreview content={currentBody} />
+          </div>
         </div>
       </div>
 
