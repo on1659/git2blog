@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { posts, postVersions, publications, platformCredentials } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getPlatform } from "@/lib/platforms/registry";
 import type { PublishResult } from "@/lib/platforms/types";
 
@@ -81,6 +81,17 @@ export async function POST(request: Request) {
 
       // Publish each selected version
       for (const version of selectedVersions) {
+        // 중복 발행 체크
+        const existingPub = await db
+          .select()
+          .from(publications)
+          .where(
+            and(
+              eq(publications.postVersionId, version.id),
+              eq(publications.platformId, platformId)
+            )
+          );
+
         const tags = (() => {
           try {
             return JSON.parse(version.tags);
@@ -98,6 +109,42 @@ export async function POST(request: Request) {
           coverImage: version.coverImage || undefined,
           isDraft: !!isDraft,
         };
+
+        // 이미 발행된 경우: update 지원하면 업데이트, 아니면 건너뛰기
+        if (existingPub.length > 0) {
+          const existing = existingPub[0];
+          console.log("[publish] 이미 발행됨:", { platformId, lang: version.language, platformPostId: existing.platformPostId });
+
+          if (platform.update && existing.platformPostId) {
+            console.log("[publish] 업데이트 시도:", { platformId, lang: version.language });
+            const result = await platform.update(existing.platformPostId, publishInput, creds);
+            console.log("[publish] 업데이트 결과:", result);
+
+            if (result.success) {
+              await db
+                .update(publications)
+                .set({
+                  url: result.url || existing.url,
+                  isDraft: !!isDraft,
+                  publishedAt: new Date(),
+                })
+                .where(eq(publications.id, existing.id));
+            }
+
+            results.push(result);
+          } else {
+            console.log("[publish] 중복 건너뛰기:", { platformId, lang: version.language });
+            results.push({
+              success: true,
+              platform: platform.config.name,
+              platformPostId: existing.platformPostId || undefined,
+              url: existing.url || undefined,
+              error: "이미 발행됨 (건너뜀)",
+            });
+          }
+          continue;
+        }
+
         console.log("[publish] 발행 시도:", { platformId, lang: version.language, slug: publishInput.slug, tags, isDraft: publishInput.isDraft });
 
         const result = await platform.publish(publishInput, creds);
