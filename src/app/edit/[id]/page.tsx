@@ -39,6 +39,7 @@ const PLATFORM_LABELS: Record<string, string> = {
   hashnode: "Hashnode",
   medium: "Medium",
   devto: "DEV.to",
+  radar: "Radar Blog",
   tistory: "티스토리",
   naver: "네이버",
 };
