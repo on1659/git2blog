@@ -1,6 +1,6 @@
 # git2blog
 
-GitHub 리포 → 커밋 분석 → 블로그 글 생성 → Hashnode 발행.
+GitHub 리포 → 커밋 분석 → 블로그 글 생성 → Hashnode + Radar Blog 발행.
 이 프로젝트는 CLI 도구가 아니라, Claude Code 워크플로우다.
 
 ## 프로젝트 구조
@@ -8,7 +8,7 @@ GitHub 리포 → 커밋 분석 → 블로그 글 생성 → Hashnode 발행.
 ```
 CLAUDE.md              ← 이 파일 (스킬 + 워크플로우)
 .env                   ← API 키 (gitignore)
-scripts/publish.sh     ← Hashnode 발행 스크립트
+scripts/publish.sh     ← Hashnode + Radar Blog 발행 스크립트
 posts/                 ← 생성된 글 보관
 ```
 
@@ -20,6 +20,7 @@ posts/                 ← 생성된 글 보관
 HASHNODE_TOKEN=xxxxxxxx
 HASHNODE_PUB_ID=xxxxxxxx
 GITHUB_TOKEN=ghp_xxxxx    # 선택: private 리포 또는 rate limit 확보
+RADAR_BLOG_API_KEY=xxxxx  # 이더.dev 블로그 API 키
 ```
 
 ## 워크플로우
@@ -55,13 +56,15 @@ GitHub Token이 .env에 있으면 헤더에 추가한다:
 ### 4단계: 발행
 
 사용자가 "발행해줘"라고 하면 scripts/publish.sh를 실행한다.
+Hashnode + Radar Blog(이더.dev) 두 곳에 동시 발행된다.
 
 ```bash
-./scripts/publish.sh posts/blog_XX_ko_[주제].md          # 바로 발행
-./scripts/publish.sh posts/blog_XX_ko_[주제].md --draft   # 초안 저장
+./scripts/publish.sh posts/blog_XX_ko_[주제].md          # 바로 발행 (양쪽 모두)
+./scripts/publish.sh posts/blog_XX_ko_[주제].md --draft   # 초안 저장 (양쪽 모두)
 ```
 
-또는 직접 curl로 Hashnode GraphQL API를 호출해도 된다.
+RADAR_BLOG_API_KEY가 .env에 없으면 Radar Blog 발행은 건너뛴다.
+또는 직접 curl로 Hashnode GraphQL API나 Radar Blog REST API를 호출해도 된다.
 
 ### Publication ID 조회 (최초 1회)
 

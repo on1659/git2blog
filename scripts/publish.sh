@@ -118,17 +118,86 @@ if echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); asser
     DRAFT_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['createDraft']['draft']['id'])")
     DRAFT_TITLE=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['createDraft']['draft']['title'])")
     echo ""
-    echo "✅ 초안 저장 완료!"
+    echo "✅ [Hashnode] 초안 저장 완료!"
     echo "   제목: $DRAFT_TITLE"
     echo "   Draft ID: $DRAFT_ID"
   else
     POST_URL=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['publishPost']['post']['url'])")
     echo ""
-    echo "✅ 발행 완료!"
+    echo "✅ [Hashnode] 발행 완료!"
     echo "   $POST_URL"
   fi
 else
   echo ""
-  echo "❌ 발행 실패:"
+  echo "❌ [Hashnode] 발행 실패:"
   echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RESPONSE"
+fi
+
+# ── Radar Blog (이더.dev) 발행 ──
+if [ -n "$RADAR_BLOG_API_KEY" ]; then
+  echo ""
+  echo "📡 Radar Blog에도 발행합니다..."
+
+  # 카테고리 결정: 파일명에 commit이 들어있으면 commits, 아니면 articles
+  RADAR_CATEGORY="articles"
+  if echo "$MD_FILE" | grep -qi "commit"; then
+    RADAR_CATEGORY="commits"
+  fi
+
+  # published 여부: draft 모드면 false, 아니면 true
+  RADAR_PUBLISHED=true
+  if [ "$DRAFT_MODE" = "--draft" ]; then
+    RADAR_PUBLISHED=false
+  fi
+
+  # 태그 JSON 배열 (문자열 배열)
+  RADAR_TAGS_JSON="[]"
+  if [ -n "$TAGS" ]; then
+    RADAR_TAGS_JSON=$(echo "$TAGS" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | while read tag; do
+      echo "\"$tag\""
+    done | paste -sd',' - | sed 's/^/[/;s/$/]/')
+  fi
+
+  # JSON body 구성
+  RADAR_BODY=$(python3 -c "
+import json, sys
+
+body = {
+    'title': '''$TITLE''',
+    'content': $BODY_ESCAPED,
+    'category': '$RADAR_CATEGORY',
+    'published': $RADAR_PUBLISHED
+}
+
+slug = '''$SLUG'''
+if slug:
+    body['slug'] = slug
+
+subtitle = '''$SUBTITLE'''
+if subtitle:
+    body['subtitle'] = subtitle
+
+tags = $RADAR_TAGS_JSON
+if tags:
+    body['tags'] = tags
+
+print(json.dumps(body))
+")
+
+  RADAR_RESPONSE=$(curl -s -X POST https://radar-blog.up.railway.app/api/v1/posts \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $RADAR_BLOG_API_KEY" \
+    -d "$RADAR_BODY")
+
+  if echo "$RADAR_RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('success')" 2>/dev/null; then
+    RADAR_SLUG=$(echo "$RADAR_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['slug'])")
+    echo "✅ [Radar Blog] 발행 완료!"
+    echo "   https://radar-blog.up.railway.app/posts/$RADAR_SLUG"
+  else
+    echo "❌ [Radar Blog] 발행 실패:"
+    echo "$RADAR_RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RADAR_RESPONSE"
+  fi
+else
+  echo ""
+  echo "⚠️  RADAR_BLOG_API_KEY가 .env에 없어서 Radar Blog 발행을 건너뜁니다."
 fi
