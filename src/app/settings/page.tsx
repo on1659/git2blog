@@ -69,6 +69,15 @@ const PLATFORM_GUIDES: Record<string, { title: string; steps: string[] }> = {
       "생성된 API 키를 복사해서 'API 키' 필드에 붙여넣습니다.",
     ],
   },
+  radar: {
+    title: "Radar Blog API 키 설정 가이드",
+    steps: [
+      "Radar Blog(이더.dev) 관리자에게 API 키를 요청합니다.",
+      "발급받은 API 키를 'API 키' 필드에 붙여넣습니다.",
+      "테스트 버튼으로 연결을 확인합니다.",
+      "저장하면 글 발행 시 Radar Blog에도 자동으로 올라갑니다.",
+    ],
+  },
 };
 
 export default function SettingsPage() {
