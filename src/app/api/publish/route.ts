@@ -79,8 +79,22 @@ export async function POST(request: Request) {
         continue;
       }
 
+      // 영어 버전 찾기 (Radar Blog 한영 합산용)
+      const enVersion = selectedVersions.find((v) => v.language === "en");
+      const koVersion = selectedVersions.find((v) => v.language === "ko");
+
       // Publish each selected version
       for (const version of selectedVersions) {
+        // 영어 버전은 Radar Blog에만 발행 (한국어에 합산)
+        if (version.language === "en" && platformId !== "radar") {
+          console.log("[publish] 영어 버전 건너뛰기 (Radar Blog 전용):", platformId);
+          continue;
+        }
+        // Radar Blog: 영어 버전 단독 발행 건너뛰기 (한국어에 합산됨)
+        if (version.language === "en" && platformId === "radar" && koVersion) {
+          console.log("[publish] 영어 버전 건너뛰기 (한국어에 합산됨):", platformId);
+          continue;
+        }
         // 중복 발행 체크
         const existingPub = await db
           .select()
@@ -108,7 +122,17 @@ export async function POST(request: Request) {
           slug: `${post.slug}-${version.language}`,
           coverImage: version.coverImage || undefined,
           isDraft: !!isDraft,
+          titleEn: undefined as string | undefined,
+          bodyEn: undefined as string | undefined,
         };
+
+        // Radar Blog + 한국어: 영어 버전 합산
+        if (platformId === "radar" && version.language === "ko" && enVersion) {
+          publishInput.titleEn = enVersion.title;
+          publishInput.bodyEn = enVersion.body;
+          publishInput.slug = post.slug; // 한영 합산이므로 -ko 접미사 불필요
+          console.log("[publish] Radar Blog 한영 합산:", { titleEn: enVersion.title.slice(0, 30) });
+        }
 
         // 이미 발행된 경우: update 지원하면 업데이트, 아니면 건너뛰기
         if (existingPub.length > 0) {

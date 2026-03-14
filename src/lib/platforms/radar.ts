@@ -47,6 +47,8 @@ export const radar: BlogPlatform = {
       if (input.subtitle) body.subtitle = input.subtitle;
       if (input.coverImage) body.coverImage = input.coverImage;
       if (input.tags.length > 0) body.tags = input.tags;
+      if (input.titleEn) body.titleEn = input.titleEn;
+      if (input.bodyEn) body.contentEn = input.bodyEn;
 
       const res = await fetch(`${BASE_URL}/api/v1/posts`, {
         method: "POST",

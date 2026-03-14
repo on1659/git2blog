@@ -22,6 +22,8 @@ export interface PublishInput {
   slug: string;
   coverImage?: string;
   isDraft: boolean;
+  titleEn?: string;
+  bodyEn?: string;
 }
 
 export interface PublishResult {

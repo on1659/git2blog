@@ -62,6 +62,14 @@ echo "📝 제목: $TITLE"
 echo "   슬러그: $SLUG"
 echo "   태그: $TAGS"
 
+# en 파일은 Hashnode 건너뛰기 (Radar Blog에만 ko 합산으로 발행)
+if echo "$MD_FILE" | grep -q "_en_"; then
+  echo ""
+  echo "⚠️  영어 파일은 Radar Blog에서 ko 발행 시 자동 합산됩니다."
+  echo "   Hashnode + Radar Blog 모두 건너뜀."
+  exit 0
+fi
+
 # 태그 JSON 배열 생성
 TAGS_JSON="[]"
 if [ -n "$TAGS" ]; then
@@ -134,6 +142,25 @@ else
 fi
 
 # ── Radar Blog (이더.dev) 발행 ──
+
+# en 파일 자동 탐색 (ko 파일인 경우만)
+EN_TITLE=""
+EN_BODY_ESCAPED='""'
+if echo "$MD_FILE" | grep -q "_ko_"; then
+  MD_DIR=$(dirname "$MD_FILE")
+  EN_PATTERN=$(echo "$(basename "$MD_FILE")" | sed 's/_ko_[^.]*\.md/_en_*.md/')
+  EN_FILE=$(ls "$MD_DIR"/$EN_PATTERN 2>/dev/null | head -1)
+
+  if [ -n "$EN_FILE" ] && [ -f "$EN_FILE" ]; then
+    echo "🌐 영어 버전 발견: $EN_FILE"
+    EN_CONTENT=$(cat "$EN_FILE")
+    EN_FM=$(echo "$EN_CONTENT" | sed -n '/^---$/,/^---$/p' | sed '1d;$d')
+    EN_TITLE=$(echo "$EN_FM" | grep "^title:" | sed "s/^title:[[:space:]]*//" )
+    EN_BODY=$(echo "$EN_CONTENT" | sed '1,/^---$/d' | sed '1,/^---$/d')
+    EN_BODY_ESCAPED=$(echo "$EN_BODY" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read()))')
+  fi
+fi
+
 if [ -n "$RADAR_BLOG_API_KEY" ]; then
   echo ""
   echo "📡 Radar Blog에도 발행합니다..."
@@ -158,7 +185,7 @@ if [ -n "$RADAR_BLOG_API_KEY" ]; then
     done | paste -sd',' - | sed 's/^/[/;s/$/]/')
   fi
 
-  # JSON body 구성
+  # JSON body 구성 (한영 합산)
   RADAR_BODY=$(python3 -c "
 import json, sys
 
@@ -180,6 +207,14 @@ if subtitle:
 tags = $RADAR_TAGS_JSON
 if tags:
     body['tags'] = tags
+
+titleEn = '''$EN_TITLE'''
+if titleEn:
+    body['titleEn'] = titleEn
+
+contentEn = $EN_BODY_ESCAPED
+if contentEn:
+    body['contentEn'] = contentEn
 
 print(json.dumps(body))
 ")
