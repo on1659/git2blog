@@ -146,17 +146,21 @@ export default function WritePage() {
     }
   }
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const [uploadedKo, setUploadedKo] = useState<File | null>(null);
+  const [uploadedEn, setUploadedEn] = useState<File | null>(null);
+
+  async function handleUploadSubmit() {
+    if (!uploadedKo) return;
 
     setUploading(true);
     setError("");
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("language", "ko");
+      formData.append("file", uploadedKo);
+      if (uploadedEn) {
+        formData.append("fileEn", uploadedEn);
+      }
 
       const res = await fetch("/api/upload", { method: "POST", body: formData });
 
@@ -298,21 +302,57 @@ export default function WritePage() {
       {/* Step 1: Upload */}
       {step === 1 && mode === "upload" && (
         <div className="animate-fade-up">
-          <label className="card card-interactive block rounded-lg p-10 text-center cursor-pointer" style={{ border: "2px dashed var(--border-emphasis)" }}>
-            <input type="file" accept=".md,.markdown" onChange={handleUpload} className="hidden" />
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 text-xl" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>
-              ↑
-            </div>
-            <p className="text-sm mb-1" style={{ color: "var(--text-primary)" }}>
-              {uploading ? "업로드 중..." : "클릭하여 마크다운 파일 선택"}
-            </p>
-            <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-              frontmatter(title, tags 등)가 포함된 .md 파일
-            </p>
-          </label>
-          <button className="btn-ghost text-sm mt-4" onClick={() => setMode(null)}>
-            ← 모드 선택으로
-          </button>
+          <div className="flex flex-col gap-4">
+            {/* 한국어 파일 (필수) */}
+            <label className="card card-interactive block rounded-lg p-8 text-center cursor-pointer" style={{ border: `2px dashed ${uploadedKo ? "var(--primary)" : "var(--border-emphasis)"}` }}>
+              <input type="file" accept=".md,.markdown" onChange={(e) => setUploadedKo(e.target.files?.[0] || null)} className="hidden" />
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>
+                  {uploadedKo ? "✓" : "↑"}
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                    한국어 마크다운 {uploadedKo ? `— ${uploadedKo.name}` : "(필수)"}
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                    frontmatter(title, tags 등)가 포함된 .md 파일
+                  </p>
+                </div>
+              </div>
+            </label>
+
+            {/* 영어 파일 (선택) */}
+            <label className="card card-interactive block rounded-lg p-8 text-center cursor-pointer" style={{ border: `2px dashed ${uploadedEn ? "var(--primary)" : "var(--border-default)"}` }}>
+              <input type="file" accept=".md,.markdown" onChange={(e) => setUploadedEn(e.target.files?.[0] || null)} className="hidden" />
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg" style={{ background: uploadedEn ? "var(--primary-soft)" : "var(--bg-elevated)", color: uploadedEn ? "var(--primary)" : "var(--text-tertiary)" }}>
+                  {uploadedEn ? "✓" : "↑"}
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                    영어 마크다운 {uploadedEn ? `— ${uploadedEn.name}` : "(선택)"}
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                    Radar Blog 한영 전환용 — 없으면 한국어만 발행
+                  </p>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div className="flex items-center gap-3 mt-6">
+            <button className="btn-ghost text-sm" onClick={() => { setMode(null); setUploadedKo(null); setUploadedEn(null); }}>
+              ← 모드 선택으로
+            </button>
+            <button
+              onClick={handleUploadSubmit}
+              disabled={!uploadedKo || uploading}
+              className="btn btn-primary"
+              style={{ padding: "10px 24px" }}
+            >
+              {uploading ? "업로드 중..." : "업로드"}
+            </button>
+          </div>
         </div>
       )}
 
