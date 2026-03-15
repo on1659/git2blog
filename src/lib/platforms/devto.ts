@@ -66,6 +66,16 @@ export const devto: BlogPlatform = {
       }
 
       const data = await res.json();
+      // DEV.to가 published: false로 응답하면 모더레이션 대기 상태
+      if (!input.isDraft && data.published === false) {
+        return {
+          success: false,
+          platform: "devto",
+          platformPostId: String(data.id),
+          url: data.url,
+          error: "DEV.to 모더레이션 대기 중 — 잠시 후 자동 발행됩니다",
+        };
+      }
       return {
         success: true,
         platform: "devto",
@@ -99,6 +109,7 @@ export const devto: BlogPlatform = {
             article: {
               title: input.title,
               body_markdown: input.body,
+              published: true,
               tags: input.tags.map(sanitizeTag).filter(Boolean).slice(0, 4),
             },
           }),

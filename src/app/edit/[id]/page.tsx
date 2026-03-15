@@ -485,8 +485,8 @@ function PublishModal({
                 <span className="font-medium">{r.platform}</span>:{" "}
                 {r.success ? (
                   r.url ? (
-                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="underline">발행 완료</a>
-                  ) : "초안 저장 완료"
+                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="underline">{isDraft ? "초안 저장 완료" : "발행 완료"}</a>
+                  ) : (isDraft ? "초안 저장 완료" : "발행 완료")
                 ) : r.error}
               </div>
             ))}
