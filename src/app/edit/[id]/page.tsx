@@ -354,6 +354,33 @@ export default function EditorPage() {
 
         <div className={`flex-1 ${mobileView === "edit" ? "hidden md:block" : ""}`}>
           <div className="card rounded-lg p-5 h-full min-h-[500px] overflow-y-auto text-sm">
+            {/* Frontmatter preview */}
+            {(titles[activeTab] || subtitles[activeTab] || tags[activeTab]) && (
+              <div className="mb-5 pb-5" style={{ borderBottom: "1px solid var(--border-default)" }}>
+                {titles[activeTab] && (
+                  <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--text-primary)", margin: 0, lineHeight: 1.3 }}>
+                    {titles[activeTab]}
+                  </h1>
+                )}
+                {subtitles[activeTab] && (
+                  <p style={{ fontSize: "1rem", color: "var(--text-secondary)", marginTop: 8, marginBottom: 0, lineHeight: 1.5 }}>
+                    {subtitles[activeTab]}
+                  </p>
+                )}
+                {tags[activeTab] && (
+                  <div className="flex flex-wrap gap-2" style={{ marginTop: 12 }}>
+                    {tags[activeTab].split(",").map((tag, i) => tag.trim() && (
+                      <span
+                        key={i}
+                        style={{ display: "inline-block", padding: "3px 12px", borderRadius: "var(--radius-full)", fontSize: 12, fontWeight: 500, background: "var(--primary-soft)", color: "var(--primary)" }}
+                      >
+                        {tag.trim()}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <MarkdownPreview content={currentBody} />
           </div>
         </div>
