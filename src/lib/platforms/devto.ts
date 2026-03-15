@@ -1,5 +1,10 @@
 import type { BlogPlatform, PublishInput, PublishResult, CheckExistsResult } from "./types";
 
+/** DEV.to 태그: 영숫자+언더스코어만 허용, 하이픈→언더스코어 변환 */
+function sanitizeTag(tag: string): string {
+  return tag.toLowerCase().replace(/-/g, "").replace(/[^a-z0-9]/g, "");
+}
+
 export const devto: BlogPlatform = {
   config: {
     id: "devto",
@@ -45,7 +50,7 @@ export const devto: BlogPlatform = {
             title: input.title,
             body_markdown: input.body,
             published: !input.isDraft,
-            tags: input.tags.slice(0, 4),
+            tags: input.tags.map(sanitizeTag).filter(Boolean).slice(0, 4),
             cover_image: input.coverImage || undefined,
           },
         }),
@@ -94,7 +99,7 @@ export const devto: BlogPlatform = {
             article: {
               title: input.title,
               body_markdown: input.body,
-              tags: input.tags.slice(0, 4),
+              tags: input.tags.map(sanitizeTag).filter(Boolean).slice(0, 4),
             },
           }),
         }
