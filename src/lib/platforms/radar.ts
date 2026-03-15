@@ -72,8 +72,8 @@ export const radar: BlogPlatform = {
       return {
         success: true,
         platform: "radar",
-        platformPostId: data.data.id,
-        url: `${BASE_URL}/posts/${data.data.slug}`,
+        platformPostId: String(data.data.id),
+        url: `${BASE_URL}/posts/${data.data.id}`,
       };
     } catch (e: unknown) {
       return {
