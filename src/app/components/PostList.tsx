@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { getCategoryById } from "@/lib/categories";
 
 const PLATFORM_LABELS: Record<string, string> = {
   hashnode: "Hashnode",
@@ -14,6 +15,7 @@ const PLATFORM_LABELS: Record<string, string> = {
 type PostItem = {
   id: number;
   slug: string;
+  category?: string;
   status: string;
   updatedAt: string | Date;
   versions: { id: number; language: string; title: string }[];
@@ -45,14 +47,28 @@ export default function PostList({ posts }: { posts: PostItem[] }) {
 
   return (
     <div className="flex flex-col gap-3 stagger">
-      {posts.map((post) => (
-        <div key={post.id} className="card card-interactive animate-fade-up">
+      {posts.map((post) => {
+        const cat = getCategoryById(post.category || "general");
+        return (
+        <div
+          key={post.id}
+          className="card card-interactive animate-fade-up"
+          style={{ borderLeft: `3px solid ${cat.color}` }}
+        >
           <Link
             href={`/edit/${post.id}`}
             className="block px-6 py-5"
           >
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
               <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span
+                    className="badge"
+                    style={{ background: cat.soft, color: cat.color, fontSize: 10 }}
+                  >
+                    {cat.label}
+                  </span>
+                </div>
                 <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>
                   {post.versions[0]?.title || post.slug}
                 </p>
@@ -113,7 +129,8 @@ export default function PostList({ posts }: { posts: PostItem[] }) {
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

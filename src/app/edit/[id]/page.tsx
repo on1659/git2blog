@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
 import MarkdownPreview from "../../components/MarkdownPreview";
+import { CATEGORIES, getCategoryById, DEFAULT_CATEGORY } from "@/lib/categories";
 
 type Version = {
   id: number;
@@ -30,6 +31,7 @@ type Post = {
   id: number;
   slug: string;
   githubUrl: string | null;
+  category: string;
   status: string;
   versions: Version[];
   publications: Publication[];
@@ -59,6 +61,7 @@ export default function EditorPage() {
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [pubStatus, setPubStatus] = useState<Record<number, { exists: boolean; error?: string }>>({});
 
+  const [category, setCategory] = useState<string>(DEFAULT_CATEGORY);
   const [titles, setTitles] = useState<Record<string, string>>({});
   const [subtitles, setSubtitles] = useState<Record<string, string>>({});
   const [bodies, setBodies] = useState<Record<string, string>>({});
@@ -69,6 +72,7 @@ export default function EditorPage() {
       .then((r) => r.json())
       .then((data) => {
         setPost(data);
+        setCategory(data.category || DEFAULT_CATEGORY);
         const t: Record<string, string> = {};
         const st: Record<string, string> = {};
         const b: Record<string, string> = {};
@@ -109,12 +113,12 @@ export default function EditorPage() {
       await fetch(`/api/posts/${postId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ versions }),
+        body: JSON.stringify({ versions, category }),
       });
     } finally {
       setSaving(false);
     }
-  }, [post, titles, subtitles, bodies, tags, postId]);
+  }, [post, titles, subtitles, bodies, tags, category, postId]);
 
   // Ctrl+S
   useEffect(() => {
@@ -174,9 +178,37 @@ export default function EditorPage() {
   }
 
   const currentBody = bodies[activeTab] || "";
+  const currentCat = getCategoryById(category);
 
   return (
     <div className="animate-fade-up">
+      {/* Category gradient banner */}
+      <div
+        className="rounded-lg mb-6 px-6 py-4 flex items-center justify-between"
+        style={{ background: currentCat.gradient, transition: "background 0.3s ease" }}
+      >
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.7)" }}>카테고리</p>
+          <p className="text-lg font-bold" style={{ color: "#fff" }}>{currentCat.label}</p>
+        </div>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="rounded-md px-3 py-2 text-sm font-medium border-0 cursor-pointer"
+          style={{
+            background: "rgba(0,0,0,0.3)",
+            color: "#fff",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          {CATEGORIES.map((c) => (
+            <option key={c.id} value={c.id} style={{ background: "#18181b", color: "#fafafa" }}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-1">

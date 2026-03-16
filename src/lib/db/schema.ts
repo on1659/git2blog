@@ -4,6 +4,7 @@ export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
   slug: text("slug").unique().notNull(),
   githubUrl: text("github_url"),
+  category: text("category").notNull().default("general"),
   status: text("status", { enum: ["draft", "published"] })
     .notNull()
     .default("draft"),

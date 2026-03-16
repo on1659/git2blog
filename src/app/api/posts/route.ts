@@ -32,7 +32,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { slug, githubUrl, versions } = body;
+    const { slug, githubUrl, versions, category } = body;
 
     if (!slug) {
       return NextResponse.json(
@@ -57,6 +57,7 @@ export async function POST(request: Request) {
       .values({
         slug: finalSlug,
         githubUrl: githubUrl || null,
+        category: category || "general",
         status: "draft",
         createdAt: now,
         updatedAt: now,

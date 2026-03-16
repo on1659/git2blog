@@ -67,6 +67,11 @@ export async function ensureTables() {
       )
     `;
 
+    // Add category column if not exists
+    await sql`
+      ALTER TABLE posts ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'general'
+    `;
+
     console.log("[db] Tables ensured");
   } catch (e) {
     console.error("[db] Migration error:", e);

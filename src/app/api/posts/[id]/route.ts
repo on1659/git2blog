@@ -57,14 +57,16 @@ export async function PUT(
     const { id } = await params;
     const postId = parseInt(id);
     const body = await request.json();
-    const { versions } = body;
+    const { versions, category } = body;
 
     const now = new Date();
 
-    // Update post timestamp
+    // Update post timestamp + category
+    const updateData: { updatedAt: Date; category?: string } = { updatedAt: now };
+    if (category) updateData.category = category;
     await db
       .update(posts)
-      .set({ updatedAt: now })
+      .set(updateData)
       .where(eq(posts.id, postId));
 
     // Update versions
