@@ -78,6 +78,31 @@ const PLATFORM_GUIDES: Record<string, { title: string; steps: string[] }> = {
       "저장하면 글 발행 시 Radar Blog에도 자동으로 올라갑니다.",
     ],
   },
+  x: {
+    title: "X (Twitter) 설정 가이드",
+    steps: [
+      "developer.x.com에 접속해서 Developer Portal에 로그인합니다.",
+      "Projects & Apps에서 새 App을 생성합니다 (Free tier 가능).",
+      "App Settings > User authentication settings에서 Read and Write 권한을 설정합니다.",
+      "Keys and tokens 탭에서 API Key와 API Secret을 복사합니다.",
+      "같은 탭에서 Access Token and Secret을 Generate하고 복사합니다.",
+      "4개 키를 모두 아래 필드에 붙여넣습니다.",
+      "참고: Free tier는 월 1,500건 트윗이 가능합니다. 블로그 홍보용으로 충분합니다.",
+    ],
+  },
+  threads: {
+    title: "Threads 설정 가이드",
+    steps: [
+      "developers.facebook.com에서 Meta Developer 계정으로 로그인합니다.",
+      "My Apps > Create App에서 Business 타입 앱을 생성합니다.",
+      "앱 대시보드에서 Threads API를 추가(Add Product)합니다.",
+      "Threads API > Settings에서 Threads 계정을 연결하고 권한을 부여합니다.",
+      "API Explorer 또는 OAuth flow를 통해 Access Token을 발급받습니다.",
+      "발급받은 short-lived 토큰을 long-lived 토큰으로 교환합니다:\nGET https://graph.threads.net/access_token?grant_type=th_exchange_token&client_secret={앱시크릿}&access_token={단기토큰}",
+      "User ID는 Threads API Explorer에서 GET /me 호출로 확인할 수 있습니다.",
+      "참고: Long-lived 토큰은 60일 유효합니다. 만료 전에 갱신이 필요합니다.",
+    ],
+  },
 };
 
 export default function SettingsPage() {
