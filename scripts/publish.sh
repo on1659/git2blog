@@ -62,12 +62,17 @@ echo "📝 제목: $TITLE"
 echo "   슬러그: $SLUG"
 echo "   태그: $TAGS"
 
-# en 파일은 Hashnode 건너뛰기 (Radar Blog에만 ko 합산으로 발행)
+# 언어 감지: en 파일이면 영어 publication + DEV.to 발행
+IS_EN=false
 if echo "$MD_FILE" | grep -q "_en_"; then
-  echo ""
-  echo "⚠️  영어 파일은 Radar Blog에서 ko 발행 시 자동 합산됩니다."
-  echo "   Hashnode + Radar Blog 모두 건너뜀."
-  exit 0
+  IS_EN=true
+fi
+
+# Hashnode Publication ID 결정 (영어면 EN용, 없으면 기본)
+ACTIVE_PUB_ID="$HASHNODE_PUB_ID"
+if [ "$IS_EN" = true ] && [ -n "$HASHNODE_EN_PUB_ID" ]; then
+  ACTIVE_PUB_ID="$HASHNODE_EN_PUB_ID"
+  echo "🌐 영어 Publication으로 발행합니다."
 fi
 
 # 태그 JSON 배열 생성
@@ -87,7 +92,7 @@ if [ "$DRAFT_MODE" = "--draft" ]; then
   echo "📋 초안 모드로 저장합니다..."
   MUTATION="mutation {
     createDraft(input: {
-      publicationId: \"$HASHNODE_PUB_ID\",
+      publicationId: \"$ACTIVE_PUB_ID\",
       title: $(echo "$TITLE" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read().strip()))'),
       contentMarkdown: $BODY_ESCAPED,
       tags: $TAGS_JSON
@@ -99,7 +104,7 @@ else
   echo "🚀 발행합니다..."
 
   # input 구성
-  INPUT_FIELDS="\"publicationId\": \"$HASHNODE_PUB_ID\""
+  INPUT_FIELDS="\"publicationId\": \"$ACTIVE_PUB_ID\""
   INPUT_FIELDS="$INPUT_FIELDS, \"title\": $(echo "$TITLE" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read().strip()))')"
   INPUT_FIELDS="$INPUT_FIELDS, \"contentMarkdown\": $BODY_ESCAPED"
   INPUT_FIELDS="$INPUT_FIELDS, \"tags\": $TAGS_JSON"
@@ -141,7 +146,12 @@ else
   echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RESPONSE"
 fi
 
-# ── Radar Blog (이더.dev) 발행 ──
+# ── Radar Blog (이더.dev) 발행 (한국어 파일만) ──
+
+if [ "$IS_EN" = true ]; then
+  echo ""
+  echo "ℹ️  영어 파일은 Radar Blog 건너뜀 (ko 발행 시 자동 합산)"
+fi
 
 # en 파일 자동 탐색 (ko 파일인 경우만)
 EN_TITLE=""
@@ -161,7 +171,7 @@ if echo "$MD_FILE" | grep -q "_ko_"; then
   fi
 fi
 
-if [ -n "$RADAR_BLOG_API_KEY" ]; then
+if [ "$IS_EN" != true ] && [ -n "$RADAR_BLOG_API_KEY" ]; then
   echo ""
   echo "📡 Radar Blog에도 발행합니다..."
 
@@ -232,7 +242,103 @@ print(json.dumps(body))
     echo "❌ [Radar Blog] 발행 실패:"
     echo "$RADAR_RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RADAR_RESPONSE"
   fi
-else
+elif [ "$IS_EN" != true ]; then
   echo ""
   echo "⚠️  RADAR_BLOG_API_KEY가 .env에 없어서 Radar Blog 발행을 건너뜁니다."
+fi
+
+# ── DEV.to 발행 (영어 파일만) ──
+
+if [ "$IS_EN" = true ]; then
+  if [ -n "$DEVTO_TOKEN" ]; then
+    echo ""
+    echo "📡 DEV.to에도 발행합니다..."
+
+    DEVTO_PUBLISHED=true
+    if [ "$DRAFT_MODE" = "--draft" ]; then
+      DEVTO_PUBLISHED=false
+    fi
+
+    python3 - "$MD_FILE" "$DEVTO_PUBLISHED" "$DEVTO_TOKEN" << 'DEVTO_PY'
+import json, sys, re, os
+import urllib.request, urllib.error
+from pathlib import Path
+
+md_path = Path(sys.argv[1])
+published = sys.argv[2].lower() == 'true'
+token = sys.argv[3]
+content = md_path.read_text(encoding='utf-8')
+
+parts = content.split('---', 2)
+if len(parts) < 3:
+    print('❌ frontmatter 형식이 올바르지 않습니다.')
+    sys.exit(1)
+
+fm_raw = parts[1]
+body = parts[2].lstrip('\n')
+
+fm = {}
+for line in fm_raw.splitlines():
+    if ':' in line:
+        k, v = line.split(':', 1)
+        fm[k.strip()] = v.strip()
+
+title = fm.get('title', '').strip()
+if not title:
+    print('❌ frontmatter에 title이 없습니다.')
+    sys.exit(1)
+
+subtitle = fm.get('subtitle', '').strip()
+description = subtitle[:200] if subtitle else ''
+
+tags_raw = fm.get('tags', '')
+tags = []
+if tags_raw:
+    for t in tags_raw.split(','):
+        t = t.strip()
+        if not t:
+            continue
+        slug = re.sub(r'[^a-z0-9]', '', t.lower())
+        slug = slug[:20]
+        if slug:
+            tags.append(slug)
+if len(tags) > 4:
+    tags = tags[:4]
+
+payload = {
+    'article': {
+        'title': title,
+        'published': published,
+        'body_markdown': body,
+        'tags': tags,
+    }
+}
+if description:
+    payload['article']['description'] = description
+
+req = urllib.request.Request(
+    'https://dev.to/api/articles',
+    data=json.dumps(payload).encode('utf-8'),
+    headers={
+        'Content-Type': 'application/json',
+        'api-key': token
+    },
+    method='POST'
+)
+
+try:
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read().decode('utf-8'))
+        status = '초안 저장' if not published else '발행'
+        print(f'✅ [DEV.to] {status} 완료!')
+        print(f'   {data.get("url", data.get("id", ""))}')
+except urllib.error.HTTPError as e:
+    body = e.read().decode('utf-8', errors='ignore')
+    print(f'❌ [DEV.to] 발행 실패:')
+    print(body)
+DEVTO_PY
+  else
+    echo ""
+    echo "⚠️  DEVTO_TOKEN이 .env에 없어서 DEV.to 발행을 건너뜁니다."
+  fi
 fi
