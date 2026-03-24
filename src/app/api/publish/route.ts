@@ -85,12 +85,7 @@ export async function POST(request: Request) {
 
       // Publish each selected version
       for (const version of selectedVersions) {
-        // 영어 버전은 Radar Blog에만 발행 (한국어에 합산)
-        if (version.language === "en" && platformId !== "radar") {
-          console.log("[publish] 영어 버전 건너뛰기 (Radar Blog 전용):", platformId);
-          continue;
-        }
-        // Radar Blog: 영어 버전 단독 발행 건너뛰기 (한국어에 합산됨)
+        // Radar Blog: 영어 버전은 한국어에 합산되므로 단독 발행 건너뛰기
         if (version.language === "en" && platformId === "radar" && koVersion) {
           console.log("[publish] 영어 버전 건너뛰기 (한국어에 합산됨):", platformId);
           continue;
