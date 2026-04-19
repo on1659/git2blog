@@ -13,7 +13,7 @@
 - **본업:** Unreal Engine 5 C++ 게임 프로그래머 (멀티플레이어, Slate UI, iOS/Android 크로스플랫폼)
 - **사이드:** AI 공부 + AI로 실제 작동하는 프로덕트 만들기 + 수익화 실험
 - **블로그 목적:** 삽질 기록 + 기술 브랜딩 + 같은 길 걷는 사람한테 도움 되기
-- **블로그 이름:** Radar (radar92.hashnode.dev)
+- **블로그 이름:** Radar (radarlog.kr)
 - **플랫폼:** Hashnode (한영 블로그 2개, GitHub 연동 자동 발행)
 
 ---

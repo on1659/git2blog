@@ -20,7 +20,7 @@ posts/                 ← 생성된 글 보관
 HASHNODE_TOKEN=xxxxxxxx
 HASHNODE_PUB_ID=xxxxxxxx
 GITHUB_TOKEN=ghp_xxxxx    # 선택: private 리포 또는 rate limit 확보
-RADAR_BLOG_API_KEY=xxxxx  # 이더.dev 블로그 API 키
+RADAR_BLOG_API_KEY=xxxxx  # radarlog.kr 블로그 API 키
 ```
 
 ## 워크플로우
@@ -56,7 +56,7 @@ GitHub Token이 .env에 있으면 헤더에 추가한다:
 ### 4단계: 발행
 
 사용자가 "발행해줘"라고 하면 scripts/publish.sh를 실행한다.
-Hashnode + Radar Blog(이더.dev) 두 곳에 동시 발행된다.
+Hashnode + Radar Blog(radarlog.kr) 두 곳에 동시 발행된다.
 
 ```bash
 ./scripts/publish.sh posts/blog_XX_ko_[주제].md          # 바로 발행 (양쪽 모두)
@@ -73,7 +73,7 @@ source .env
 curl -s -X POST https://gql.hashnode.com \
   -H "Content-Type: application/json" \
   -H "Authorization: $HASHNODE_TOKEN" \
-  -d '{"query":"{ publication(host: \"radar92.hashnode.dev\") { id title } }"}'
+  -d '{"query":"{ publication(host: \"radarlog.kr\") { id title } }"}'
 ```
 
 ---
@@ -101,7 +101,7 @@ description: Use this skill whenever the user asks to write a blog post, create 
 - **본업:** Unreal Engine 5 C++ 게임 프로그래머 (멀티플레이어, Slate UI, iOS/Android 크로스플랫폼)
 - **사이드:** AI 공부 + AI로 실제 작동하는 프로덕트 만들기 + 수익화 실험
 - **블로그 목적:** 삽질 기록 + 기술 브랜딩 + 같은 길 걷는 사람한테 도움 되기
-- **블로그 이름:** Radar (radar92.hashnode.dev)
+- **블로그 이름:** Radar (radarlog.kr)
 - **플랫폼:** Hashnode (한영 블로그 2개, GitHub 연동 자동 발행)
 
 ---

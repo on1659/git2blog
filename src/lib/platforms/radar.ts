@@ -1,11 +1,11 @@
 import type { BlogPlatform, PublishInput, PublishResult } from "./types";
 
-const BASE_URL = "https://radar-blog.up.railway.app";
+const BASE_URL = "https://radarlog.kr";
 
 export const radar: BlogPlatform = {
   config: {
     id: "radar",
-    name: "Radar Blog (이더.dev)",
+    name: "Radar Blog (radarlog.kr)",
     icon: "R",
     url: BASE_URL,
     credentialFields: [
@@ -43,7 +43,7 @@ export const radar: BlogPlatform = {
         published: !input.isDraft,
       };
 
-      if (input.slug) body.slug = input.slug;
+      // slug을 보내지 않으면 서버에서 숫자 ID를 자동 생성한다
       if (input.subtitle) body.subtitle = input.subtitle;
       if (input.coverImage) body.coverImage = input.coverImage;
       if (input.tags.length > 0) body.tags = input.tags;
@@ -73,7 +73,7 @@ export const radar: BlogPlatform = {
         success: true,
         platform: "radar",
         platformPostId: String(data.data.id),
-        url: `${BASE_URL}/posts/${data.data.id}`,
+        url: `${BASE_URL}/post/${data.data.slug}`,
       };
     } catch (e: unknown) {
       return {

@@ -146,7 +146,7 @@ else
   echo "$RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RESPONSE"
 fi
 
-# ── Radar Blog (이더.dev) 발행 (한국어 파일만) ──
+# ── Radar Blog (radarlog.kr) 발행 (한국어 파일만) ──
 
 if [ "$IS_EN" = true ]; then
   echo ""
@@ -206,10 +206,6 @@ body = {
     'published': $RADAR_PUBLISHED
 }
 
-slug = '''$SLUG'''
-if slug:
-    body['slug'] = slug
-
 subtitle = '''$SUBTITLE'''
 if subtitle:
     body['subtitle'] = subtitle
@@ -229,7 +225,7 @@ if contentEn:
 print(json.dumps(body))
 ")
 
-  RADAR_RESPONSE=$(curl -s -X POST https://radar-blog.up.railway.app/api/v1/posts \
+  RADAR_RESPONSE=$(curl -s -X POST https://radarlog.kr/api/v1/posts \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $RADAR_BLOG_API_KEY" \
     -d "$RADAR_BODY")
@@ -237,7 +233,7 @@ print(json.dumps(body))
   if echo "$RADAR_RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('success')" 2>/dev/null; then
     RADAR_SLUG=$(echo "$RADAR_RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['slug'])")
     echo "✅ [Radar Blog] 발행 완료!"
-    echo "   https://radar-blog.up.railway.app/posts/$RADAR_SLUG"
+    echo "   https://radarlog.kr/post/$RADAR_SLUG"
   else
     echo "❌ [Radar Blog] 발행 실패:"
     echo "$RADAR_RESPONSE" | python3 -m json.tool 2>/dev/null || echo "$RADAR_RESPONSE"
